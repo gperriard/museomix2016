@@ -1,5 +1,8 @@
 import RPi.GPIO as GPIO
 import time
+import sys
+import os
+
 GPIO.setmode(GPIO.BCM)
 
 TRIG = 4
@@ -15,29 +18,6 @@ GPIO.setup(PIR,GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 GPIO.output(TRIG, False)
 print "Waiting For Sensor To Settle"
-
-GPIO.wait_for_edge(PIR, GPIO.RISING, callback=detected_people)
-
-detected = False
-
-while True:
-
-    if detected :
-        read_distance()
-        print "Detected OK"
-        detected = False
-
-    time.sleep(2)
-
-
-GPIO.cleanup()
-print 'playing audio'
-play_audio()
-print 'audio played'
-
-def detected_people(PIR):
-    detected = True
-
 
 def read_distance():
 
@@ -59,6 +39,33 @@ def read_distance():
     return distance
 
 
-def play_audio():
-    audio = pyglet.media.load('sound2.mp3', streaming=False)
-    audio.play()
+def play_audio(file):
+    os.system('aplay '+ file)
+
+
+def detected_people(PIR):
+    detected = True
+
+print 'playing audio'
+play_audio('sound1.wav')
+print 'audio played'
+
+sys.exit(0)
+
+
+
+GPIO.add_event_detect(PIR, GPIO.RISING, callback=detected_people)
+
+detected = False
+
+while True:
+    if detected :
+        read_distance()
+        print "Detected OK"
+        detected = False
+
+    time.sleep(2)
+
+
+GPIO.cleanup()
+
