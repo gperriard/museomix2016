@@ -1,5 +1,7 @@
 import RPi.GPIO as GPIO
 import time
+import pyglet
+
 GPIO.setmode(GPIO.BCM)
 
 TRIG = 4
@@ -15,6 +17,8 @@ GPIO.setup(PIR,GPIO.IN)
 GPIO.output(TRIG, False)
 print "Waiting For Sensor To Settle"
 
+sound2 = pyglet.media.load('sound2.mp3', streaming=False)
+sound2.play()
 
 
 while True:
