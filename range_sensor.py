@@ -1,7 +1,7 @@
 import RPi.GPIO as GPIO
 import time
 import sys
-import os
+import subprocess
 
 GPIO.setmode(GPIO.BCM)
 
@@ -9,7 +9,8 @@ TRIG = 4
 ECHO = 3
 PIR = 2
 
-print "Distance Measurement In Progress"
+step_1_process = None
+step_2_process = None
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(TRIG,GPIO.OUT)
@@ -17,10 +18,8 @@ GPIO.setup(ECHO,GPIO.IN)
 GPIO.setup(PIR,GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 GPIO.output(TRIG, False)
-print "Waiting For Sensor To Settle"
 
 def read_distance():
-
     GPIO.output(TRIG, True)
     time.sleep(0.00001)
     GPIO.output(TRIG, False)
@@ -34,38 +33,31 @@ def read_distance():
     pulse_duration = pulse_end - pulse_start
     distance = pulse_duration * 17150
     distance = round(distance, 2)
-    print "Distance:",distance,"cm"
 
     return distance
 
 
-def play_audio(file):
-    os.system('aplay '+ file)
+def player(file):
+    return subprocess.Popen(['aplay', file])
 
 
-def detected_people(PIR):
-    detected = True
-
-print 'playing audio'
-play_audio('sound1.wav')
-print 'audio played'
-
-sys.exit(0)
+def step_1(PIR):
+    global step_1_process
+    # Run sound1 only if sound1 or sound2 is not already playing
+    if (step_2_process is None or (step_2_process is not None and step_2_process.poll() == 0)) and (step_1_process is None or step_1_process.poll() == 0):
+        step_1_process = player('sound1.wav')
 
 
-
-GPIO.add_event_detect(PIR, GPIO.RISING, callback=detected_people)
-
-detected = False
+GPIO.add_event_detect(PIR, GPIO.RISING, callback=step_1)
 
 while True:
-    if detected :
-        read_distance()
-        print "Detected OK"
-        detected = False
+    if read_distance() < 6:
+        if step_2_process is not None and step_1_process.poll() is None:
+            step_1_process.kill()
 
-    time.sleep(2)
-
+        # Run step 2 only if it hasn't running yet (or just finished)
+        if step_2_process is None or step_2_process.poll() == 0:
+            step_2_process = player('sound2.wav')
 
 GPIO.cleanup()
 
