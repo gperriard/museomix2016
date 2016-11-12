@@ -28,16 +28,19 @@ while True:
         detected = False
 
     time.sleep(2)
-    
+
 
 GPIO.cleanup()
+print 'playing audio'
+play_audio()
+print 'audio played'
 
 def detected_people(PIR):
     detected = True
 
 
 def read_distance():
-    
+
     GPIO.output(TRIG, True)
     time.sleep(0.00001)
     GPIO.output(TRIG, False)
@@ -55,3 +58,7 @@ def read_distance():
 
     return distance
 
+
+def play_audio():
+    audio = pyglet.media.load('sound2.mp3', streaming=False)
+    audio.play()
