@@ -23,6 +23,8 @@ def read_distance():
     GPIO.output(TRIG, True)
     time.sleep(0.00001)
     GPIO.output(TRIG, False)
+    pulse_start = 0
+    pulse_end = 0
 
     while GPIO.input(ECHO)==0:
         pulse_start = time.time()
@@ -43,6 +45,7 @@ def player(file):
 
 def step_1(PIR):
     global step_1_process
+
     # Run sound1 only if sound1 or sound2 is not already playing
     if (step_2_process is None or (step_2_process is not None and step_2_process.poll() == 0)) and (step_1_process is None or step_1_process.poll() == 0):
         step_1_process = player('sound1.wav')
@@ -52,8 +55,9 @@ GPIO.add_event_detect(PIR, GPIO.RISING, callback=step_1)
 
 while True:
     if read_distance() < 6:
-        if step_2_process is not None and step_1_process.poll() is None:
+        if step_1_process is not None and step_1_process.poll() is None:
             step_1_process.kill()
+            step_1_process = None
 
         # Run step 2 only if it hasn't running yet (or just finished)
         if step_2_process is None or step_2_process.poll() == 0:
