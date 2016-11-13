@@ -49,26 +49,30 @@ def player(file):
     return subprocess.Popen(['aplay', file])
 
 
+def is_running(process):
+    return process is subprocess.Popen and process.poll() is None
+
+
 def step_1(PIR):
     global step_1_process
     global step_2_process
 
     # Run sound1 only if sound1 or sound2 is not already playing
-    if (step_2_process is None or (step_2_process is not None and step_2_process.poll() == 0)) and (step_1_process is None or step_1_process.poll() == 0):
+    if (step_1_process is None or not is_running(step_1_process)) and (step_2_process is None or not is_running(step_2_process)):
         step_1_process = player('sound1.wav')
 
 
 GPIO.add_event_detect(PIR, GPIO.RISING, callback=step_1)
 
 while True:
-    if read_distance() < 500:
-        if step_1_process is not None and step_1_process.poll() is None:
-            step_1_process.kill()
-            step_1_process = None
+    # Stop sound1 if sound2 is running
+    if is_running(step_1_process) and is_running(step_2_process):
+        step_1_process.kill()
+        step_1_process = None
 
-        # Run step 2 only if it hasn't running yet (or just finished)
-        if step_2_process is None or step_2_process.poll() == 0:
-            step_2_process = player('sound2.wav')
+    # Run sound2 only if visitor is a 1.5 meter of the second sensor and sound2 is not already playing
+    if (read_distance() < 80) and (step_2_process is None or not is_running(step_2_process)):
+        step_2_process = player('sound2.wav')
 
 GPIO.cleanup()
 
