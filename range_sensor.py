@@ -21,6 +21,11 @@ GPIO.output(TRIG, False)
 
 
 def read_distance():
+    """
+    Read the distance between the visitor and the captor.
+    Due to the captor can detect something at 1.5 meter max.
+    """
+
     GPIO.output(TRIG, True)
     time.sleep(0.00001)
     GPIO.output(TRIG, False)
@@ -56,7 +61,7 @@ def step_1(PIR):
 GPIO.add_event_detect(PIR, GPIO.RISING, callback=step_1)
 
 while True:
-    if read_distance() < 6:
+    if read_distance() < 500:
         if step_1_process is not None and step_1_process.poll() is None:
             step_1_process.kill()
             step_1_process = None
